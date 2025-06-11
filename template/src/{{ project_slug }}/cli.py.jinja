@@ -1,0 +1,37 @@
+"""{{ project_name }} のコマンドラインインターフェース
+
+このファイルは {{ project_name }} のメインCLIエントリーポイントです。
+各サブコマンドは個別のファイルで定義し、ここで統合します。
+
+使用例:
+    {{ project_slug }} --help
+    {{ project_slug }} hello --name 太郎
+    {{ project_slug }} version
+
+pyproject.tomlに以下の設定を追加して、`uv sync`でインストールしてください。
+
+[project.scripts]
+{{ project_slug }} = "{{ project_slug }}.cli:main"
+"""
+
+import click
+from .commands.hello import hello
+
+
+@click.group()
+@click.version_option()
+def main():
+    """{{ project_description }}
+    
+    各サブコマンドのヘルプは以下で確認できます:
+        {{ project_slug }} <command> --help
+    """
+    pass
+
+
+# サブコマンドを登録
+main.add_command(hello)
+
+
+if __name__ == "__main__":
+    main()

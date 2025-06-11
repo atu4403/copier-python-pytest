@@ -1,0 +1,67 @@
+"""{{ project_name }} の挨拶コマンド
+
+サンプルのサブコマンド実装です。
+このファイルを参考に、新しいコマンドを追加してください。
+
+使用例:
+    {{ project_slug }} hello
+    {{ project_slug }} hello --name 太郎
+    {{ project_slug }} hello --name 山田 --lang en
+"""
+
+import click
+
+
+@click.command()
+@click.option(
+    '--name', '-n',
+    default='世界',
+    help='挨拶する相手の名前を指定します'
+)
+@click.option(
+    '--lang', '-l',
+    type=click.Choice(['ja', 'en'], case_sensitive=False),
+    default='ja',
+    help='言語を選択します (ja: 日本語, en: 英語)'
+)
+@click.option(
+    '--count', '-c',
+    type=int,
+    default=1,
+    help='挨拶を繰り返す回数'
+)
+def hello(name: str, lang: str, count: int):
+    """挨拶メッセージを表示します
+    
+    指定した名前に対して挨拶を行います。
+    言語と繰り返し回数も指定できます。
+    
+    Examples:
+        \b
+        {{ project_slug }} hello
+        {{ project_slug }} hello --name 太郎
+        {{ project_slug }} hello --name John --lang en
+        {{ project_slug }} hello --name 田中 --count 3
+    """
+    # 言語に応じた挨拶メッセージ
+    greetings = {
+        'ja': f'こんにちは、{name}さん！',
+        'en': f'Hello, {name}!'
+    }
+    
+    message = greetings.get(lang, greetings['ja'])
+    
+    # 指定回数だけ挨拶を表示
+    for i in range(count):
+        if count > 1:
+            click.echo(f'{i + 1}: {message}')
+        else:
+            click.echo(message)
+    
+    # 追加情報の表示
+    if count > 1:
+        click.echo(f'\n✅ {count}回の挨拶が完了しました！')
+
+
+# サブコマンドとして使用する場合のエクスポート
+__all__ = ['hello']

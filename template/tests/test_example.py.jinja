@@ -1,0 +1,338 @@
+import json
+import os
+from pathlib import Path
+
+# test_examples.py
+import pytest
+{% if cli_support %}
+from click.testing import CliRunner
+
+from {{ project_slug }}.cli import main
+from {{ project_slug }}.commands.hello import hello
+{% endif %}
+
+
+# テスト対象のクラス・関数
+class Calculator:
+    def add(self, a, b):
+        return a + b
+
+    def divide(self, a, b):
+        if b == 0:
+            raise ValueError("Division by zero is not allowed")
+        return a / b
+
+    def square_root(self, x):
+        if x < 0:
+            raise ValueError("Cannot calculate square root of negative number")
+        return x**0.5
+
+
+
+
+# テストクラス
+class TestCalculator:
+    """計算機のテストクラス"""
+
+    def setup_method(self):
+        """各テストメソッドの前に実行される"""
+        self.calc = Calculator()
+
+    def test_add_positive_numbers(self):
+        """正の数の加算テスト"""
+        result = self.calc.add(3, 5)
+        assert result == 8
+
+    def test_add_negative_numbers(self):
+        """負の数の加算テスト"""
+        result = self.calc.add(-3, -5)
+        assert result == -8
+
+    # パラメータ化テスト
+    @pytest.mark.parametrize(
+        "a, b, expected",
+        [
+            (1, 2, 3),
+            (0, 0, 0),
+            (-1, 1, 0),
+            (10, -5, 5),
+            (2.5, 3.5, 6.0),
+        ],
+    )
+    def test_add_parametrized(self, a, b, expected):
+        """パラメータ化された加算テスト"""
+        result = self.calc.add(a, b)
+        assert result == expected
+
+    # 例外テスト
+    def test_divide_by_zero_raises_exception(self):
+        """ゼロ除算の例外テスト"""
+        with pytest.raises(ValueError, match="Division by zero is not allowed"):
+            self.calc.divide(10, 0)
+
+    def test_square_root_negative_raises_exception(self):
+        """負の数の平方根の例外テスト"""
+        with pytest.raises(
+            ValueError, match="Cannot calculate square root of negative number"
+        ):
+            self.calc.square_root(-4)
+
+    @pytest.mark.parametrize(
+        "dividend, divisor, expected",
+        [
+            (10, 2, 5.0),
+            (15, 3, 5.0),
+            (7, 2, 3.5),
+            (-10, 2, -5.0),
+            (10, -2, -5.0),
+        ],
+    )
+    def test_divide_parametrized(self, dividend, divisor, expected):
+        """パラメータ化された除算テスト"""
+        result = self.calc.divide(dividend, divisor)
+        assert result == expected
+
+class FileHandler:
+    def write_data(self, filepath, data):
+        """データをJSONファイルに書き込む"""
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def read_data(self, filepath):
+        """JSONファイルからデータを読み込む"""
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"File {filepath} not found")
+
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+
+class TestFileHandler:
+    """ファイル操作のテストクラス"""
+
+    def setup_method(self):
+        """各テストメソッドの前に実行される"""
+        self.handler = FileHandler()
+
+    def test_write_and_read_data(self, tmp_path):
+        """tmp_pathを使ったファイル書き込み・読み込みテスト"""
+        # テストデータ
+        test_data = {"name": "太郎", "age": 30, "hobbies": ["読書", "映画鑑賞", "プログラミング"]}
+
+        # 一時ファイルパスを作成
+        test_file = tmp_path / "test_data.json"
+
+        # データを書き込み
+        self.handler.write_data(test_file, test_data)
+
+        # ファイルが作成されたことを確認
+        assert test_file.exists()
+        print(f"test_file: {test_file} is exists")
+
+        # データを読み込み
+        loaded_data = self.handler.read_data(test_file)
+
+        # データが正しく保存・読み込みされたことを確認
+        assert loaded_data == test_data
+
+    def test_write_multiple_files(self, tmp_path):
+        """複数ファイルの書き込みテスト"""
+        # 複数のテストデータ
+        datasets = [
+            {"id": 1, "value": "first"},
+            {"id": 2, "value": "second"},
+            {"id": 3, "value": "third"},
+        ]
+
+        created_files = []
+
+        # 複数ファイルを作成
+        for i, data in enumerate(datasets):
+            file_path = tmp_path / f"data_{i}.json"
+            self.handler.write_data(file_path, data)
+            created_files.append(file_path)
+
+        # すべてのファイルが作成されたことを確認
+        for file_path in created_files:
+            assert file_path.exists()
+
+        # 各ファイルの内容を確認
+        for i, file_path in enumerate(created_files):
+            loaded_data = self.handler.read_data(file_path)
+            assert loaded_data == datasets[i]
+
+    def test_read_nonexistent_file_raises_exception(self, tmp_path):
+        """存在しないファイルの読み込み例外テスト"""
+        nonexistent_file = tmp_path / "nonexistent.json"
+
+        with pytest.raises(
+            FileNotFoundError, match=f"File {nonexistent_file} not found"
+        ):
+            self.handler.read_data(nonexistent_file)
+
+    def test_write_to_nested_directory(self, tmp_path):
+        """ネストしたディレクトリへの書き込みテスト"""
+        # ネストしたディレクトリを作成
+        nested_dir = tmp_path / "level1" / "level2"
+        nested_dir.mkdir(parents=True)
+
+        test_data = {"message": "nested directory test"}
+        test_file = nested_dir / "nested_test.json"
+
+        # データを書き込み
+        self.handler.write_data(test_file, test_data)
+
+        # ファイルが作成されたことを確認
+        assert test_file.exists()
+
+        # データを読み込んで確認
+        loaded_data = self.handler.read_data(test_file)
+        assert loaded_data == test_data
+
+
+# フィクスチャの例
+@pytest.fixture
+def sample_data():
+    """テスト用のサンプルデータを提供するフィクスチャ"""
+    return {
+        "users": [
+            {"name": "Alice", "age": 25},
+            {"name": "Bob", "age": 30},
+            {"name": "Charlie", "age": 35},
+        ],
+        "total_count": 3,
+    }
+
+
+def test_fixture_usage(sample_data, tmp_path):
+    """フィクスチャを使用したテスト"""
+    handler = FileHandler()
+    test_file = tmp_path / "fixture_test.json"
+
+    # フィクスチャのデータを使用
+    handler.write_data(test_file, sample_data)
+    loaded_data = handler.read_data(test_file)
+
+    assert loaded_data == sample_data
+    assert len(loaded_data["users"]) == 3
+    assert loaded_data["total_count"] == 3
+
+{% if cli_support %}
+class TestCLI:
+    """CLIコマンドのテスト"""
+    
+    def test_main_command_help(self):
+        """メインコマンドのヘルプテスト"""
+        runner = CliRunner()
+        result = runner.invoke(main, ['--help'])
+        
+        assert result.exit_code == 0
+        assert "{{ project_description }}" in result.output
+    
+    def test_hello_command_default(self):
+        """helloコマンドのデフォルト動作テスト"""
+        runner = CliRunner()
+        result = runner.invoke(hello)
+        
+        assert result.exit_code == 0
+        assert "こんにちは、世界さん！" in result.output
+    
+    def test_hello_command_with_name(self):
+        """helloコマンドの名前指定テスト"""
+        runner = CliRunner()
+        result = runner.invoke(hello, ['--name', '太郎'])
+        
+        assert result.exit_code == 0
+        assert "こんにちは、太郎さん！" in result.output
+    
+    def test_hello_command_english(self):
+        """helloコマンドの英語モードテスト"""
+        runner = CliRunner()
+        result = runner.invoke(hello, ['--name', 'John', '--lang', 'en'])
+        
+        assert result.exit_code == 0
+        assert "Hello, John!" in result.output
+    
+    def test_hello_command_count(self):
+        """helloコマンドの回数指定テスト"""
+        runner = CliRunner()
+        result = runner.invoke(hello, ['--count', '2'])
+        
+        assert result.exit_code == 0
+        assert "1:" in result.output
+        assert "2:" in result.output
+        assert "2回の挨拶が完了しました" in result.output
+
+
+{% endif %}
+
+class TestMocking:
+    """pytest-mockを使ったモッキングのテスト例"""
+
+    def test_print_mock_with_mocker(self, mocker):
+        """pytest-mockのmockerフィクスチャを使用"""
+        # mockerフィクスチャでprint関数をモック
+        mock_print = mocker.patch("builtins.print")
+
+        print("テストメッセージ")
+        print("2回目のメッセージ")
+
+        # pytest-mockならassert_called_withが使いやすい
+        mock_print.assert_any_call("テストメッセージ")
+        mock_print.assert_any_call("2回目のメッセージ")
+        assert mock_print.call_count == 2
+
+    def test_mock_multiple_calls(self, mocker):
+        """複数回呼び出しのテスト"""
+        mock_func = mocker.Mock()
+        mock_func.side_effect = ["1回目", "2回目", "3回目"]
+
+        results = []
+        for i in range(3):
+            results.append(mock_func(f"call_{i}"))
+
+        assert results == ["1回目", "2回目", "3回目"]
+        assert mock_func.call_count == 3
+
+        # 各呼び出しを個別に検証
+        mock_func.assert_any_call("call_0")
+        mock_func.assert_any_call("call_1")
+        mock_func.assert_any_call("call_2")
+
+    def test_mock_exception(self, mocker):
+        """例外を発生させるモック"""
+        mock_func = mocker.Mock()
+        mock_func.side_effect = ValueError("モックエラー")
+
+        with pytest.raises(ValueError, match="モックエラー"):
+            mock_func()
+
+        mock_func.assert_called_once()
+
+    def test_context_manager_mock(self, mocker):
+        """コンテキストマネージャーのモック"""
+        mock_open = mocker.mock_open(read_data="ファイル内容")
+        mocker.patch("builtins.open", mock_open)
+
+        with open("test.txt", "r") as f:
+            content = f.read()
+
+        assert content == "ファイル内容"
+        mock_open.assert_called_once_with("test.txt", "r")
+
+
+@pytest.mark.slow
+def test_slow_operation():
+    """時間のかかるテスト（slowマーカー付き）"""
+    import time
+
+    time.sleep(1)  # 実際にはより時間のかかる処理
+    assert True
+
+
+# テスト実行時のコマンド例:
+# pytest -v                    # 詳細表示
+# pytest -k "add"              # "add"を含むテストのみ実行
+# pytest --run-slow            # slowマーカーを含むテストを実行
+# pytest tests/test_examples.py::TestCalculator       # 特定のクラスのみ実行
+# pytest tests/test_examples.py::test_fixture_usage   # 特定の関数のみ実行

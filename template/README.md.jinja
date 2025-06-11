@@ -1,0 +1,78 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+## 📦 インストール
+
+```bash
+# 開発者向けインストール
+git clone https://github.com/{{ github_username }}/{{ project_slug }}
+cd {{ project_slug }}
+uv sync
+```
+
+{% if cli_support %}
+## 🚀 使用方法
+
+### CLIコマンド
+
+```bash
+# ヘルプを表示
+{{ project_slug }} --help
+
+# 基本的な使い方
+{{ project_slug }} hello --name 世界
+```
+
+### Pythonライブラリとして
+
+```python
+from {{ project_slug }} import main
+
+# 基本的な使い方
+result = main()
+print(result)
+```
+
+{% else %}
+## 🚀 使用方法
+
+```python
+from {{ project_slug }} import main
+
+# 基本的な使い方
+result = main()
+print(result)
+```
+
+{% endif %}
+## 🧪 テスト
+
+```bash
+# テストを実行
+uv run pytest
+
+# カバレッジ付きでテスト実行
+uv run pytest --cov=src
+```
+
+## 🔧 開発
+
+```bash
+# コードフォーマット
+uv run ruff format
+
+# リンティング実行
+uv run ruff check
+
+# 型チェック実行
+uv run mypy src
+```
+
+## 📝 ライセンス
+
+このプロジェクトは [{{ license_type }}](LICENSE) ライセンスの下で公開されています。
+
+## 👤 作者
+
+**{{ author_name }}** - [{{ github_username }}](https://github.com/{{ github_username }})

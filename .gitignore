@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.bak
+.backup
+
+# Copier test outputs (開発時にテンプレートテストした場合)
+test-project*/
+example-*/
+demo-*/
+
+# Log files
+*.log

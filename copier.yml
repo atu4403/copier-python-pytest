@@ -1,0 +1,119 @@
+# copier-python-pytest テンプレート設定
+
+_min_copier_version: "9.4.0"
+_subdirectory: template
+
+_message_after_copy: |
+  🎉 pytest環境付きPythonプロジェクトが作成されました！
+  
+  ✅ 設定済み機能:
+     • pytest + conftest.py + pytest.ini
+  {% if cli_support %}
+     • Click CLI サポート
+  {% endif %}
+  
+  {% if cli_support -%}
+  🔧 CLI設定の追加手順:
+     pyproject.tomlに以下を追加してください：
+     
+     [project.scripts]
+     {{ cli_command_name }} = "{{ project_slug }}.cli:main"
+  
+  {%- endif %}
+  
+  📁 次のステップ:
+     cd {{ project_slug }}
+     # 仮想環境をアクティベート（お使いのシェルに合わせて選択）
+     source .venv/bin/activate        # bash/zsh
+     source .venv/bin/activate.fish   # fish
+     .venv\Scripts\activate           # Windows CMD
+     .venv\Scripts\Activate.ps1       # PowerShell
+     
+     # テスト実行
+     pytest
+  {% if cli_support %}
+     {{ project_slug }} --help  # CLIヘルプを確認
+  {% endif %}
+
+# === プロジェクト基本情報 ===
+project_slug:
+  type: str
+  default: "{{ _copier_conf.dst_path | basename }}"
+  when: false
+
+project_name:
+  type: str
+  help: "プロジェクト名（表示用）"
+  default: "{{ project_slug | replace('_', ' ') | title }}"
+  when: false
+
+project_description:
+  type: str
+  help: "プロジェクトの説明（1行で簡潔に）"
+  default: "Pythonプロジェクト"
+
+# === 作者情報 ===
+author_name:
+  type: str
+  help: "作者名"
+  default: "Your Name"
+
+author_email:
+  type: str
+  help: "メールアドレス"
+  default: "your.email@example.com"
+
+github_username:
+  type: str
+  help: "GitHubユーザー名（リポジトリ作成時に使用）"
+  default: "your-username"
+
+# === プロジェクト設定 ===
+cli_support:
+  type: bool
+  help: "コマンドラインツール機能を追加しますか？"
+  default: false
+
+cli_command_name:
+  type: str
+  help: "CLIコマンド名（例: myapp, mytool）"
+  default: "{{ project_slug.replace('_', '-') }}"
+  when: "{{ cli_support }}"
+
+# === 自動生成される値（ユーザーには表示しない） ===
+copyright_year:
+  type: int
+  default: "{{ '%Y' | strftime }}"
+  when: false
+
+current_date:
+  type: str
+  default: "{{ '%Y-%m-%d' | strftime }}"
+  when: false
+
+# === タスク（テンプレート適用後の処理） ===
+_tasks:
+  # 開発依存関係を追加
+  - "uv add --dev pytest pytest-mock"
+  
+  # CLI機能が有効な場合はClickを追加
+  - "{% if cli_support %}uv add click{% endif %}"
+    
+  # 依存関係を同期
+  - "uv sync"
+
+# === ファイル除外設定 ===
+_skip_if_exists:
+  - ".git/"
+  - ".copier-answers.yml"
+
+
+# === 信頼できるテンプレート設定 ===
+_templates_suffix: ".jinja"
+
+# === コピー後のクリーンアップ ===
+_exclude:
+  - "*.pyc"
+  - "__pycache__/"
+  - ".DS_Store"
+  - "Thumbs.db"
