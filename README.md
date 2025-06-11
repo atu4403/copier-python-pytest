@@ -9,7 +9,7 @@ uvで作成したPythonプロジェクトにpytest環境とCLI機能を追加す
 uv init --lib my_awesome_project
 
 # 2. テンプレート適用
-copier copy gh:atu4403/copier-python-pytest my_awesome_project
+copier copy gh:atu4403/copier-python-pytest my_awesome_project --trust
 # ファイル競合時は以下を選択：
 # - README.md → Yes（テンプレートで上書き）
 # - .gitignore → Yes（テンプレートで上書き）
@@ -74,7 +74,7 @@ uv init --lib my_awesome_project
 #### 2. テンプレートを適用
 
 ```bash
-copier copy gh:atu4403/copier-python-pytest my_awesome_project
+copier copy gh:atu4403/copier-python-pytest my_awesome_project --trust
 ```
 
 **📋 ファイル競合時の対応:**
